@@ -113,9 +113,7 @@ perform_root_git_command() {
 
 perform_sub_repo_git_command() {
 	SUB_REPO_PATH="$(get_root_repo_path)/$1"
-	params=( $* )
-    unset params[0]
-    set -- "${params[@]}"
+	shift
 
 	# change to repo root path
 	cd "$SUB_REPO_PATH"
@@ -262,9 +260,7 @@ sub_repo_exec_function_on_all() {
 	FNAME="$1"
 
 	# remove function name from params
-	params=( $* )
-    unset params[0]
-    set -- "${params[@]}"
+	shift
 
 	while read -r line ; do
 		LIST_REPO="$(echo $line | awk '{print $7}' | rev | cut -c2- | rev)"
@@ -285,11 +281,9 @@ sub_repo_perform_self_command() {
 	REPO_PATH="$2"
 	SELF_CMD="$3"
 
-	params=( $* )
-    unset params[0]
-    unset params[1]
-    unset params[2]
-    set -- "${params[@]}"
+	shift
+	shift
+	shift
 
 	$0 $SELF_CMD "$REPO_PATH" "$@"
 }
@@ -400,10 +394,8 @@ elif [ "$CMD" == "exec" ]; then
 
 	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
 		# remove command and repo name
-		params=( $* )
-    	unset params[0]
-    	unset params[1]
-    	set -- "${params[@]}"
+		shift
+		shift
 
 		perform_sub_repo_git_command "$EXEC_SUB_REPO" "$@"
 	else
@@ -420,10 +412,8 @@ elif [ "$CMD" == "exec-sh" ]; then
 
 	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
 		# remove command and repo name
-		params=( $* )
-    	unset params[0]
-    	unset params[1]
-    	set -- "${params[@]}"
+		shift
+		shift
 
 		cd "$(get_root_repo_path)/$EXEC_SUB_REPO"
 		"$@"
@@ -434,17 +424,13 @@ elif [ "$CMD" == "exec-sh" ]; then
 
 elif [ "$CMD" == "exec-all" ]; then
 	# remove command from params
-	params=( $* )
-    unset params[0]
-    set -- "${params[@]}"
+	shift
 
 	sub_repo_exec_function_on_all sub_repo_perform_self_command exec "$@"
 
 elif [ "$CMD" == "exec-sh-all" ]; then
 	# remove command from params
-	params=( $* )
-    unset params[0]
-    set -- "${params[@]}"
+	shift
 
 	sub_repo_exec_function_on_all sub_repo_perform_self_command exec-cmd "$@"
 
