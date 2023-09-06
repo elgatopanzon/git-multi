@@ -260,6 +260,8 @@ elif [ "$CMD" == "remove" ]; then
 				if [ "$REPLY" == "y" ]; then
 					sub_repo_remove "$REMOVE_REPO" "$REMOVE_REPO_DIR"
 				fi
+			else
+				sub_repo_remove "$REMOVE_REPO" "$REMOVE_REPO_DIR"
 			fi
 		fi
 	else
