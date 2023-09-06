@@ -28,12 +28,12 @@ print_help() {
 
 		echo "Working with sub repos:"
 		print_help exec
-		print_help exec-cmd
+		print_help exec-sh
 		echo ""
 
 		echo "Batch commands to work with all repos:"
 		print_help exec-all
-		print_help exec-cmd-all
+		print_help exec-sh-all
 		print_help init-all
 		print_help update-all
 		print_help rm-all
