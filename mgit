@@ -52,10 +52,10 @@ print_help() {
 		echo "mgit exec <PATH> CMD...: run a git command on the sub repo at PATH"
 	elif [ "$1" == "exec-all" ]; then
 		echo "mgit exec-all CMD...: run a git command on all local sub repo paths"
-	elif [ "$1" == "exec-cmd" ]; then
-		echo "mgit exec-cmd <PATH> CMD...: run a shell command on the sub repo at PATH"
-	elif [ "$1" == "exec-cmd-all" ]; then
-		echo "mgit exec-cmd-all CMD...: run a shell command on all local sub repo paths"
+	elif [ "$1" == "exec-sh" ]; then
+		echo "mgit exec-sh <PATH> CMD...: run a shell command on the sub repo at PATH"
+	elif [ "$1" == "exec-sh-all" ]; then
+		echo "mgit exec-sh-all CMD...: run a shell command on all local sub repo paths"
 	elif [ "$1" == "init" ]; then
 		echo "mgit init <PATH>: init the sub repo at PATH from the gitignore"
 	elif [ "$1" == "init-all" ]; then
@@ -377,7 +377,7 @@ elif [ "$CMD" == "exec" ]; then
 		echo "Invalid sub-repo: $EXEC_SUB_REPO"
 	fi
 
-elif [ "$CMD" == "exec-cmd" ]; then
+elif [ "$CMD" == "exec-sh" ]; then
 	EXEC_SUB_REPO="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$EXEC_SUB_REPO" ]; then
@@ -407,7 +407,7 @@ elif [ "$CMD" == "exec-all" ]; then
 
 	sub_repo_exec_function_on_all sub_repo_perform_self_command exec "$@"
 
-elif [ "$CMD" == "exec-cmd-all" ]; then
+elif [ "$CMD" == "exec-sh-all" ]; then
 	# remove command from params
 	params=( $* )
     unset params[0]
