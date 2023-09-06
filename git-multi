@@ -174,18 +174,23 @@ sub_repo_run_git_multi() {
 sub_repo_update_submodules() {
 	REPO="$1"
 	REPO_DIR="$2"
+	UPDATE_TYPE="$3"
 
 	echo "Updating submodules for $REPO at $REPO_DIR"
 
 	# change to repo root path
 	cd "$(get_root_repo_path)/$REPO_DIR" || exit
 
-	# clone the repo content to root relevant path
-	echo "Resetting submodules to current HEAD..."
-	git submodule foreach --recursive git reset --hard
+	if [ "$UPDATE_TYPE" = "master" ]; then
+		echo "Resetting submodules to current HEAD..."
+		git submodule foreach --recursive git reset --hard
 
-	echo "Updating submodules to current master"
-	git submodule update --recursive --remote
+		echo "Updating submodules to current master"
+		git submodule update --recursive --remote
+	elif [ "$UPDATE_TYPE" = "current" ]; then
+		echo "Initialising all submodules to current commit"
+		git submodule update --recursive --init
+	fi
 
 	# return to previous dir
 	cd "$CURRENT_DIR" || exit
@@ -335,7 +340,7 @@ if [ "$CMD" = "clone" ]; then
 	else
 		sub_repo_add "$ADD_REPO" "$ADD_REPO_DIR"
 
-		sub_repo_update_submodules "$ADD_REPO" "$ADD_REPO_DIR"
+		sub_repo_update_submodules "$ADD_REPO" "$ADD_REPO_DIR" "current"
 
 		# run git multi on the repo
 		sub_repo_run_git_multi "$ADD_REPO" "$ADD_REPO_DIR" init-all
@@ -460,7 +465,7 @@ elif [ "$CMD" = "init" ]; then
 	# clone repo to sub repo path
 	sub_repo_clone "$INIT_REPO" "$INIT_REPO_PATH"
 
-	sub_repo_update_submodules "$INIT_REPO" "$INIT_REPO_PATH"
+	sub_repo_update_submodules "$INIT_REPO" "$INIT_REPO_PATH" "current"
 
 	# run git multi on the repo
 	sub_repo_run_git_multi "$INIT_REPO" "$INIT_REPO_PATH" init-all
@@ -482,7 +487,7 @@ elif [ "$CMD" = "update" ]; then
 	sub_repo_pull "$UPDATE_REPO" "$UPDATE_REPO_PATH"
 
 	# update submodules
-	sub_repo_update_submodules "$UPDATE_REPO" "$UPDATE_REPO_PATH"
+	sub_repo_update_submodules "$UPDATE_REPO" "$UPDATE_REPO_PATH" "current"
 
 	# run git multi on the repo
 	sub_repo_run_git_multi "$UPDATE_REPO" "$UPDATE_REPO_PATH" update-all
