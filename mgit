@@ -529,7 +529,7 @@ elif [ "$CMD" == "cd" ]; then
 			cd "$MGIT_ROOT" # if MGIT_ROOT is set, return there
 		fi
 	else
-		export MGIT_ROOT="$(get_root_repo_path)"
+		export MGIT_ROOT="$CURRENT_DIR"
 		cd "$(get_root_repo_path)/$CD_REPO_PATH"
 	fi
 
