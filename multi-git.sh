@@ -119,8 +119,7 @@ sub_repo_exists() {
 	fi
 }
 
-
-sub_repo_add() {
+sub_repo_clone() {
 	REPO="$1"
 	REPO_DIR="$2"
 
@@ -134,6 +133,14 @@ sub_repo_add() {
 
 	# return to previous dir
 	cd "$CURRENT_DIR"
+}
+
+sub_repo_add() {
+	REPO="$1"
+	REPO_DIR="$2"
+
+	# clone repo content
+	sub_repo_clone "$REPO" "$REPO_DIR"
 
 	# update gitignore
 	gitignore_add_repo "$REPO" "$REPO_DIR"
@@ -154,7 +161,7 @@ sub_repo_remove() {
 }
 
 sub_repo_get_repo_from_path() {
-	grep "$1 " "$GITIGNORE_PATH" -B 1 | head -n 1 | awk '{print $7}' # get it from the comment line
+	grep "$1 " "$GITIGNORE_PATH" -B 1 | head -n 1 | awk '{print $7}' | rev | cut -c2- | rev # get it from the comment line
 }
 sub_repo_get_repo_path_from_repo() {
 	grep "$1" "$GITIGNORE_PATH" -A 1 | tail -n 1 | cut -c2- # get it from below the comment line
@@ -332,6 +339,17 @@ elif [ "$CMD" == "pull" ]; then
 	$0 exec-all "$CMD"
 elif [ "$CMD" == "push" ]; then
 	$0 exec-all "$CMD"
+
+# init existing repo from gitignore
+elif [ "$CMD" == "init" ]; then
+	INIT_REPO_PATH="$(sanitize_sub_repo_path "$2")"
+	INIT_REPO="$(sub_repo_get_repo_from_path "$INIT_REPO_PATH")"
+
+	# clone repo to sub repo path
+	sub_repo_clone "$INIT_REPO" "$INIT_REPO_PATH"
+
+elif [ "$CMD" == "init-all" ]; then
+	sub_repo_exec_function_on_all sub_repo_perform_self_command init "$@"
 
 elif [ "$CMD" == "help" ]; then
 	print_help
