@@ -14,9 +14,9 @@ print_help() {
 	if [ "$1" == "" ]; then
 		print_help help
 		echo "Sub repo management:"
-		print_help add
-		print_help remove
-		print_help list
+		print_help clone
+		print_help rm
+		print_help ls
 		echo ""
 		echo "Working with sub repos:"
 		print_help exec
@@ -26,12 +26,12 @@ print_help() {
 
 	elif [ "$1" == "help" ]; then
 		echo "mgit help: show this help"
-	elif [ "$1" == "add" ]; then
-		echo "mgit add REPO PATH: clone the sub repo REPO to PATH"
-	elif [ "$1" == "remove" ]; then
-		echo "mgit remove PATH: remove the sub repo at PATH"
-	elif [ "$1" == "list" ]; then
-		echo "mgit list: list all local sub repos"
+	elif [ "$1" == "clone" ]; then
+		echo "mgit clone REPO PATH: clone the sub repo REPO to PATH"
+	elif [ "$1" == "rm" ]; then
+		echo "mgit rm PATH: remove the sub repo at PATH"
+	elif [ "$1" == "ls" ]; then
+		echo "mgit ls: list all local sub repos"
 	elif [ "$1" == "exec" ]; then
 		echo "mgit exec PATH ...: run a git command on the sub repo at PATH"
 	elif [ "$1" == "exec-all" ]; then
@@ -104,8 +104,8 @@ gitignore_add_repo() {
 
 gitignore_remove_repo() {
 	# remove repo from ignore file
-	grep -v "$1" "$GITIGNORE_PATH" > temp && mv temp "$GITIGNORE_PATH"
-	grep -v "/${2} " "$GITIGNORE_PATH" > temp && mv temp "$GITIGNORE_PATH"
+	grep -v "$1" "$GITIGNORE_PATH" > temp; mv temp "$GITIGNORE_PATH"
+	grep -v "/${2} " "$GITIGNORE_PATH" > temp; mv temp "$GITIGNORE_PATH"
 
 	# commit changes to ignore file
 	gitignore_commit "remove sub-repo $1 => $2"
@@ -145,14 +145,9 @@ sub_repo_remove() {
 
 	echo "Removing sub repo at $REPO_DIR ($REPO)"
 
-	# change to repo root path
-	cd "$(get_root_repo_path)"
-
 	# remove local content
-	rm -rf "$REMOVE_REPO_DIR"
-
-	# return to previous dir
-	cd "$CURRENT_DIR"
+	echo "$(get_root_repo_path)/$REPO_DIR"
+	rm -rf "$(get_root_repo_path)/$REPO_DIR"
 
 	# update gitignore
 	gitignore_remove_repo "$REPO" "$REPO_DIR"
@@ -229,12 +224,12 @@ if ! gitignore_exists; then
 	gitignore_create
 fi
 
-if [ "$CMD" == "add" ]; then
+if [ "$CMD" == "clone" ]; then
 	ADD_REPO="$2"
 	ADD_REPO_DIR="$(sanitize_sub_repo_path "$3")"
 
 	if [ -z "$ADD_REPO" ] || [ -z "$ADD_REPO_DIR" ]; then
-		print_help add
+		print_help clone
 		exit
 	fi
 	
@@ -245,12 +240,12 @@ if [ "$CMD" == "add" ]; then
 	else
 		sub_repo_add "$ADD_REPO" "$ADD_REPO_DIR"
 	fi
-elif [ "$CMD" == "remove" ]; then
+elif [ "$CMD" == "rm" ]; then
 	REMOVE_REPO_DIR="$(sanitize_sub_repo_path "$2")"
 	REMOVE_REPO="$(sub_repo_get_repo_from_path "$REMOVE_REPO_DIR")"
 
 	if [ -z "$REMOVE_REPO_DIR" ]; then
-		print_help remove
+		print_help rm
 		exit
 	fi
 
@@ -279,7 +274,7 @@ elif [ "$CMD" == "remove" ]; then
 	fi
 
 
-elif [ "$CMD" == "list" ]; then
+elif [ "$CMD" == "ls" ]; then
 	sub_repo_exec_function_on_all sub_repo_print_info
 
 elif [ "$CMD" == "exec" ]; then
