@@ -2,13 +2,13 @@
 
 ######################################################################
 # @author      : ElGatoPanzon
-# @file        : multi-git
+# @file        : git-multi
 # @created     : Tuesday Sep 05, 2023 12:25:25 CST
 #
 # @description : Manage multiple git repos in the same directory using .gitignore
 ######################################################################
 
-# all state is stored in .gitignore using comments to identify that it's managed by multi-git
+# all state is stored in .gitignore using comments to identify that it's managed by git-multi
 
 print_help() {
 	if [ "$1" = "" ]; then
@@ -73,7 +73,7 @@ print_help() {
 	fi
 }
 
-GITIGNORE_MANAGED_STRING="Managed by multi-git"
+GITIGNORE_MANAGED_STRING="Managed by git-multi"
 
 get_root_repo_path() {
 	git rev-parse --show-toplevel
@@ -104,7 +104,7 @@ gitignore_create() {
 
 gitignore_commit() {
 	perform_root_git_command add "$GITIGNORE_PATH"
-	perform_root_git_command commit -m "multi-git: $1"
+	perform_root_git_command commit -m "git-multi: $1"
 }
 
 perform_root_git_command() {
