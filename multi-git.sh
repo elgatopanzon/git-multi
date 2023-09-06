@@ -23,6 +23,8 @@ print_help() {
 		echo "Working with sub repos:"
 		print_help exec
 		print_help exec-all
+		print_help exec-cmd
+		print_help exec-cmd-all
 
 	elif [ "$1" == "help" ]; then
 		echo "mgit help: show this help"
@@ -36,6 +38,10 @@ print_help() {
 		echo "mgit exec PATH ...: run a git command on the sub repo at PATH"
 	elif [ "$1" == "exec-all" ]; then
 		echo "mgit exec-all ...: run a git command on all local sub repo paths"
+	elif [ "$1" == "exec-cmd" ]; then
+		echo "mgit exec-cmd PATH ...: run a shell command on the sub repo at PATH"
+	elif [ "$1" == "exec-cmd-all" ]; then
+		echo "mgit exec-cmd-all ...: run a shell command on all local sub repo paths"
 	fi
 }
 
@@ -161,6 +167,47 @@ sub_repo_get_repo_path_from_repo() {
 	grep "$1" "$GITIGNORE_PATH" -A 1 | tail -n 1 | cut -c2- # get it from below the comment line
 }
 
+sub_repo_exec_function_on_all() {
+	# store the function name
+	FNAME="$1"
+
+	# remove function name from params
+	params=( $* )
+    unset params[0]
+    set -- "${params[@]}"
+
+	while read -r line ; do
+		LIST_REPO="$(echo $line | awk '{print $7}' | rev | cut -c2- | rev)"
+		LIST_REPO_PATH="$(sub_repo_get_repo_path_from_repo "$LIST_REPO" | rev | cut -c2- | rev)"
+
+		# call the function with the repo path and params
+		$FNAME "$LIST_REPO" "$LIST_REPO_PATH" "$@"
+	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
+}
+
+sub_repo_print_info() {
+	echo "/$2: $1"
+	perform_sub_repo_git_command "$2" "status --porcelain"
+}
+
+sub_repo_perform_self_command() {
+	REPO="$1"
+	REPO_PATH="$2"
+	SELF_CMD="$3"
+
+	params=( $* )
+    unset params[0]
+    unset params[1]
+    unset params[2]
+    set -- "${params[@]}"
+
+	$0 $SELF_CMD "$REPO_PATH" "$@"
+}
+
+test_function() {
+	echo "$@"
+}
+
 CMD="$1" # command to perform
 if [ -z "$CMD" ]; then
 	CMD="help"
@@ -220,14 +267,11 @@ elif [ "$CMD" == "remove" ]; then
 	else
 		echo "No sub-repo at path $REMOVE_REPO_DIR"
 	fi
-elif [ "$CMD" == "list" ]; then
-	while read -r line ; do
-		LIST_REPO="$(echo $line | awk '{print $7}' | rev | cut -c2- | rev)"
-		LIST_REPO_PATH="$(sub_repo_get_repo_path_from_repo "$LIST_REPO" | rev | cut -c2- | rev)"
 
-		echo "/$LIST_REPO_PATH: $LIST_REPO"
-		perform_sub_repo_git_command "$LIST_REPO_PATH" "status --porcelain"
-	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
+
+elif [ "$CMD" == "list" ]; then
+	sub_repo_exec_function_on_all sub_repo_print_info
+
 elif [ "$CMD" == "exec" ]; then
 	EXEC_SUB_REPO="$2"
 
@@ -243,18 +287,38 @@ elif [ "$CMD" == "exec" ]; then
 		echo "Invalid sub-repo: $EXEC_SUB_REPO"
 	fi
 
+elif [ "$CMD" == "exec-cmd" ]; then
+	EXEC_SUB_REPO="$2"
+
+	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
+		# remove command and repo name
+		params=( $* )
+    	unset params[0]
+    	unset params[1]
+    	set -- "${params[@]}"
+
+		cd "$(get_root_repo_path)/$EXEC_SUB_REPO"
+		"$@"
+		cd "$CURRENT_DIR"
+	else
+		echo "Invalid sub-repo: $EXEC_SUB_REPO"
+	fi
+
 elif [ "$CMD" == "exec-all" ]; then
 	# remove command from params
 	params=( $* )
     unset params[0]
     set -- "${params[@]}"
 
-	while read -r line ; do
-		LIST_REPO="$(echo $line | awk '{print $7}' | rev | cut -c2- | rev)"
-		LIST_REPO_PATH="$(sub_repo_get_repo_path_from_repo "$LIST_REPO" | rev | cut -c2- | rev)"
+	sub_repo_exec_function_on_all sub_repo_perform_self_command exec "$@"
 
-		$0 exec "$LIST_REPO_PATH" "$@"
-	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
+elif [ "$CMD" == "exec-cmd-all" ]; then
+	# remove command from params
+	params=( $* )
+    unset params[0]
+    set -- "${params[@]}"
+
+	sub_repo_exec_function_on_all sub_repo_perform_self_command exec-cmd "$@"
 
 # exec-all shortcuts
 elif [ "$CMD" == "status" ]; then
