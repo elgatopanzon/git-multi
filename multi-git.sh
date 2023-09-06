@@ -297,7 +297,7 @@ if [ "$CMD" == "clone" ]; then
 	else
 		sub_repo_add "$ADD_REPO" "$ADD_REPO_DIR"
 
-		sub_repo_perform_self_command "$ADD_REPO" "$ADD_REPO_DIR" update "$@"
+		sub_repo_update_submodules "$ADD_REPO" "$ADD_REPO_DIR"
 	fi
 elif [ "$CMD" == "rm" ]; then
 	REMOVE_REPO_DIR="$(sanitize_sub_repo_path "$2")"
@@ -400,7 +400,7 @@ elif [ "$CMD" == "init" ]; then
 	# clone repo to sub repo path
 	sub_repo_clone "$INIT_REPO" "$INIT_REPO_PATH"
 
-	sub_repo_perform_self_command "$INIT_REPO" "$INIT_REPO_PATH" update "$@"
+	sub_repo_update_submodules "$INIT_REPO" "$INIT_REPO_PATH"
 
 elif [ "$CMD" == "init-all" ]; then
 	sub_repo_exec_function_on_all sub_repo_perform_self_command init "$@"
