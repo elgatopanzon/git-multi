@@ -18,6 +18,7 @@ print_help() {
 		echo "Sub repo management:"
 		print_help clone
 		print_help ls
+		print_help mv
 		print_help rm
 		echo ""
 
@@ -42,6 +43,8 @@ print_help() {
 		echo "mgit help: show this help"
 	elif [ "$1" == "clone" ]; then
 		echo "mgit clone <REPO> <PATH>: clone the sub repo REPO to PATH"
+	elif [ "$1" == "mv" ]; then
+		echo "mgit mv <PATH> <NEW_PATH>: Move the sub repo at PATH to NEW_PATH"
 	elif [ "$1" == "rm" ]; then
 		echo "mgit rm <PATH>: remove the sub repo at PATH"
 	elif [ "$1" == "rm-all" ]; then
@@ -460,6 +463,25 @@ elif [ "$CMD" == "update" ]; then
 
 elif [ "$CMD" == "update-all" ]; then
 	sub_repo_exec_function_on_all sub_repo_perform_self_command update "$@"
+
+elif [ "$CMD" == "mv" ]; then
+	REPO_PATH="$2"
+	REPO_PATH_NEW="$3"
+
+	if [ -z "$REPO_PATH" ] || [ -z "$REPO_PATH_NEW" ]; then
+		print_help mv
+		exit
+	fi
+
+	REPO="$(sub_repo_get_repo_from_path "$REPO_PATH")"
+
+	if [ ! -z "$REPO" ]; then
+		sub_repo_remove "$REPO" "$REPO_PATH"
+
+		$0 clone "$REPO" "$REPO_PATH_NEW"
+	else
+		echo "Invalid sub-repo: $REPO_PATH"
+	fi
 
 elif [ "$CMD" == "help" ]; then
 	print_help
