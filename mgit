@@ -523,8 +523,13 @@ elif [ "$CMD" == "cd" ]; then
 	CD_REPO_PATH="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$CD_REPO_PATH" ]; then
-		cd "$(get_root_repo_path)"
+		if [ -z "$MGIT_ROOT" ]; then
+			cd "$(get_root_repo_path)" # return to the sub modules root
+		else
+			cd "$MGIT_ROOT" # if MGIT_ROOT is set, return there
+		fi
 	else
+		export MGIT_ROOT="$(get_root_repo_path)"
 		cd "$(get_root_repo_path)/$CD_REPO_PATH"
 	fi
 
