@@ -221,4 +221,6 @@ elif [ "$CMD" == "list" ]; then
 	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
 elif [ "$CMD" == "help" ]; then
 	print_help
+else
+	git "$@" # pass through as git command (why not)
 fi
