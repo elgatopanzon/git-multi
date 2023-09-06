@@ -43,7 +43,7 @@ print_help() {
 	elif [ "$1" = "help" ]; then
 		echo "git multi help: show this help"
 	elif [ "$1" = "clone" ]; then
-		echo "git multi clone <REPO> <PATH>: clone the sub repo REPO to PATH"
+		echo "git multi clone <REPO> <PATH> [COMMIT]: clone the sub repo REPO to PATH at optional COMMIT hash"
 	elif [ "$1" = "mv" ]; then
 		echo "git multi mv <PATH> <NEW_PATH>: Move the sub repo at PATH to NEW_PATH"
 	elif [ "$1" = "cd" ]; then
@@ -126,16 +126,16 @@ perform_sub_repo_git_command() {
 }
 
 gitignore_get_repo_string() {
-	echo "# $GITIGNORE_MANAGED_STRING (sub repo $1)"
+	echo "# $GITIGNORE_MANAGED_STRING (sub repo $1) (commit $3)"
 }
 
 gitignore_add_repo() {
 	# add cloned repo to ignore file
-	echo "$(gitignore_get_repo_string "$1" "$2") " >> "$GITIGNORE_PATH"
+	echo "$(gitignore_get_repo_string "$1" "$2" "$3") " >> "$GITIGNORE_PATH"
 	echo "/$2 " >> "$GITIGNORE_PATH"
 
 	# commit changes to ignore file
-	gitignore_commit "add sub-repo $1 => $2"
+	gitignore_commit "add sub-repo $1 => $2 (commit $3)"
 }
 
 gitignore_remove_repo() {
@@ -215,6 +215,7 @@ sub_repo_pull() {
 sub_repo_clone() {
 	REPO="$1"
 	REPO_DIR="$2"
+	REPO_COMMIT="$3"
 
 	echo "Cloning $REPO to $REPO_DIR"
 
@@ -224,6 +225,12 @@ sub_repo_clone() {
 	# clone the repo content to root relevant path
 	git clone "$REPO" "$REPO_DIR"
 
+	# checkout optional commit
+	if [ -n "$REPO_COMMIT" ]; then
+		cd "$(get_root_repo_path)/$REPO_DIR" || exit
+		git reset --hard "$REPO_COMMIT"
+	fi
+
 	# return to previous dir
 	cd "$CURRENT_DIR" || exit
 }
@@ -231,12 +238,13 @@ sub_repo_clone() {
 sub_repo_add() {
 	REPO="$1"
 	REPO_DIR="$2"
+	REPO_COMMIT="$3"
 
 	# clone repo content
-	sub_repo_clone "$REPO" "$REPO_DIR"
+	sub_repo_clone "$REPO" "$REPO_DIR" "$REPO_COMMIT"
 
 	# update gitignore
-	gitignore_add_repo "$REPO" "$REPO_DIR"
+	gitignore_add_repo "$REPO" "$REPO_DIR" "$REPO_COMMIT"
 }
 
 sub_repo_remove() {
@@ -259,6 +267,26 @@ sub_repo_get_repo_from_path() {
 sub_repo_get_repo_path_from_repo() {
 	grep "$1" "$GITIGNORE_PATH" -A 1 | tail -n 1 | cut -c2- # get it from below the comment line
 }
+sub_repo_get_repo_commit_from_repo() {
+	grep "$1" "$GITIGNORE_PATH" | awk '{print $9}' | rev | cut -c2- | rev # get it from the comment line
+}
+sub_repo_get_current_commit() {
+	perform_sub_repo_git_command "$2" "rev-parse" "--short" "HEAD"
+}
+
+gitignore_update_commit_to_current() {
+	REPO_COMMIT="$(sub_repo_get_repo_commit_from_repo "$1")"
+	REPO_COMMIT_NEW="$(sub_repo_get_current_commit "$1" "$2")"
+
+	# only update if not head (so we can keep out position, when HEAD will always stick to the latest commit)
+	if [ "$REPO_COMMIT" != "HEAD" ]; then
+		# replace old commit with new one
+		sed -i "s/$REPO_COMMIT/$REPO_COMMIT_NEW/g" "$GITIGNORE_PATH"
+
+		# commit updated gitignore
+		gitignore_commit "update sub-repo commit $1 => $2 (commit $REPO_COMMIT_NEW)"
+	fi
+}
 
 sub_repo_exec_function_on_all() {
 	# store the function name
@@ -277,12 +305,17 @@ sub_repo_exec_function_on_all() {
 }
 
 sub_repo_print_info() {
-	echo "$2: $1"
+	REPO_COMMIT="$(sub_repo_get_repo_commit_from_repo "$1")"
+
 	if [ -d "$(get_root_repo_path)/$(sanitize_sub_repo_path "$2")" ]; then
+		REPO_ACTUAL_COMMIT="$(sub_repo_get_current_commit "$1" "$2")"
 		perform_sub_repo_git_command "$2" "status" "--porcelain"
 	else
+		REPO_ACTUAL_COMMIT="???"
 		echo "Repo path not found: run \"git multi init $2\""
 	fi
+
+	echo "$2: $1 (desired-commit:$REPO_COMMIT current-commit:$REPO_ACTUAL_COMMIT)"
 }
 
 sub_repo_perform_self_command() {
@@ -327,6 +360,12 @@ fi
 if [ "$CMD" = "clone" ]; then
 	ADD_REPO="$2"
 	ADD_REPO_DIR="$(sanitize_sub_repo_path "$3")"
+	ADD_REPO_COMMIT="$4"
+
+	# set to HEAD if not provided, which will always keep it at HEAD
+	if [ -z "$ADD_REPO_COMMIT" ]; then
+		ADD_REPO_COMMIT="HEAD"
+	fi
 
 	if [ -z "$ADD_REPO" ] || [ -z "$ADD_REPO_DIR" ]; then
 		print_help clone
@@ -337,8 +376,9 @@ if [ "$CMD" = "clone" ]; then
 		echo "Repo exists"
 		echo "REPO: $ADD_REPO"
 		echo "PATH: $(sub_repo_get_repo_path_from_repo "$ADD_REPO")"
+		echo "COMMIT: $(sub_repo_get_repo_commit_from_repo "$ADD_REPO")"
 	else
-		sub_repo_add "$ADD_REPO" "$ADD_REPO_DIR"
+		sub_repo_add "$ADD_REPO" "$ADD_REPO_DIR" "$ADD_REPO_COMMIT"
 
 		sub_repo_update_submodules "$ADD_REPO" "$ADD_REPO_DIR" "current"
 
@@ -461,9 +501,10 @@ elif [ "$CMD" = "init" ]; then
 	fi
 
 	INIT_REPO="$(sub_repo_get_repo_from_path "$INIT_REPO_PATH")"
+	INIT_REPO_COMMIT="$(sub_repo_get_repo_commit_from_repo "$INIT_REPO")"
 
 	# clone repo to sub repo path
-	sub_repo_clone "$INIT_REPO" "$INIT_REPO_PATH"
+	sub_repo_clone "$INIT_REPO" "$INIT_REPO_PATH" "$INIT_REPO_COMMIT"
 
 	sub_repo_update_submodules "$INIT_REPO" "$INIT_REPO_PATH" "current"
 
@@ -486,6 +527,9 @@ elif [ "$CMD" = "update" ]; then
 	# update repo
 	sub_repo_pull "$UPDATE_REPO" "$UPDATE_REPO_PATH"
 
+	# update sub repo commit
+	gitignore_update_commit_to_current "$UPDATE_REPO" "$UPDATE_REPO_PATH"
+
 	# update submodules
 	sub_repo_update_submodules "$UPDATE_REPO" "$UPDATE_REPO_PATH" "current"
 
@@ -505,11 +549,12 @@ elif [ "$CMD" = "mv" ]; then
 	fi
 
 	REPO="$(sub_repo_get_repo_from_path "$REPO_PATH")"
+	REPO_COMMIT="$(sub_repo_get_repo_commit_from_repo "$REPO")"
 
 	if [ -n "$REPO" ]; then
 		sub_repo_remove "$REPO" "$REPO_PATH"
 
-		$0 clone "$REPO" "$REPO_PATH_NEW"
+		$0 clone "$REPO" "$REPO_PATH_NEW" "$REPO_COMMIT"
 	else
 		echo "Invalid sub-repo: $REPO_PATH"
 	fi
