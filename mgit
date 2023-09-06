@@ -13,24 +13,30 @@
 print_help() {
 	if [ "$1" == "" ]; then
 		print_help help
+		echo ""
+
 		echo "Sub repo management:"
-		echo ""
 		print_help clone
-		print_help rm
-		print_help rm-all
 		print_help ls
+		print_help rm
 		echo ""
+
 		echo "Initialising and updating sub repos:"
 		print_help init
-		print_help init-all
 		print_help update
-		print_help update-all
 		echo ""
+
 		echo "Working with sub repos:"
 		print_help exec
-		print_help exec-all
 		print_help exec-cmd
+		echo ""
+
+		echo "Batch commands to work with all repos:"
+		print_help exec-all
 		print_help exec-cmd-all
+		print_help init-all
+		print_help update-all
+		print_help rm-all
 
 	elif [ "$1" == "help" ]; then
 		echo "mgit help: show this help"
@@ -43,13 +49,13 @@ print_help() {
 	elif [ "$1" == "ls" ]; then
 		echo "mgit ls: list all local sub repos"
 	elif [ "$1" == "exec" ]; then
-		echo "mgit exec <PATH> ...: run a git command on the sub repo at PATH"
+		echo "mgit exec <PATH> CMD...: run a git command on the sub repo at PATH"
 	elif [ "$1" == "exec-all" ]; then
-		echo "mgit exec-all ...: run a git command on all local sub repo paths"
+		echo "mgit exec-all CMD...: run a git command on all local sub repo paths"
 	elif [ "$1" == "exec-cmd" ]; then
-		echo "mgit exec-cmd <PATH> ...: run a shell command on the sub repo at PATH"
+		echo "mgit exec-cmd <PATH> CMD...: run a shell command on the sub repo at PATH"
 	elif [ "$1" == "exec-cmd-all" ]; then
-		echo "mgit exec-cmd-all ...: run a shell command on all local sub repo paths"
+		echo "mgit exec-cmd-all CMD...: run a shell command on all local sub repo paths"
 	elif [ "$1" == "init" ]; then
 		echo "mgit init <PATH>: init the sub repo at PATH from the gitignore"
 	elif [ "$1" == "init-all" ]; then
