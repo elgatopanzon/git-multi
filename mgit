@@ -113,7 +113,15 @@ perform_sub_repo_git_command() {
 	params=( $* )
     unset params[0]
     set -- "${params[@]}"
-	git --git-dir="$SUB_REPO_PATH/.git" --work-tree="$SUB_REPO_PATH" "$@"
+
+	# change to repo root path
+	cd "$SUB_REPO_PATH"
+
+	# run the git command
+	git "$@"
+
+	# return to previous dir
+	cd "$CURRENT_DIR"
 }
 
 gitignore_get_repo_string() {
