@@ -11,7 +11,7 @@
 # all state is stored in .gitignore using comments to identify that it's managed by multi-git
 
 print_help() {
-	if [ "$1" == "" ]; then
+	if [ "$1" = "" ]; then
 		print_help help
 		echo ""
 
@@ -40,35 +40,35 @@ print_help() {
 		print_help update-all
 		print_help rm-all
 
-	elif [ "$1" == "help" ]; then
+	elif [ "$1" = "help" ]; then
 		echo "mgit help: show this help"
-	elif [ "$1" == "clone" ]; then
+	elif [ "$1" = "clone" ]; then
 		echo "mgit clone <REPO> <PATH>: clone the sub repo REPO to PATH"
-	elif [ "$1" == "mv" ]; then
+	elif [ "$1" = "mv" ]; then
 		echo "mgit mv <PATH> <NEW_PATH>: Move the sub repo at PATH to NEW_PATH"
-	elif [ "$1" == "cd" ]; then
+	elif [ "$1" = "cd" ]; then
 		echo "mgit cd <PATH>: change to the directory of a sub module at PATH"
-	elif [ "$1" == "rm" ]; then
+	elif [ "$1" = "rm" ]; then
 		echo "mgit rm <PATH>: remove the sub repo at PATH"
-	elif [ "$1" == "rm-all" ]; then
+	elif [ "$1" = "rm-all" ]; then
 		echo "mgit rm-all: remove all the local sub repos and cleanup"
-	elif [ "$1" == "ls" ]; then
+	elif [ "$1" = "ls" ]; then
 		echo "mgit ls: list all local sub repos"
-	elif [ "$1" == "exec" ]; then
+	elif [ "$1" = "exec" ]; then
 		echo "mgit exec <PATH> CMD...: run a git command on the sub repo at PATH"
-	elif [ "$1" == "exec-all" ]; then
+	elif [ "$1" = "exec-all" ]; then
 		echo "mgit exec-all CMD...: run a git command on all local sub repo paths"
-	elif [ "$1" == "exec-sh" ]; then
+	elif [ "$1" = "exec-sh" ]; then
 		echo "mgit exec-sh <PATH> CMD...: run a shell command on the sub repo at PATH"
-	elif [ "$1" == "exec-sh-all" ]; then
+	elif [ "$1" = "exec-sh-all" ]; then
 		echo "mgit exec-sh-all CMD...: run a shell command on all local sub repo paths"
-	elif [ "$1" == "init" ]; then
+	elif [ "$1" = "init" ]; then
 		echo "mgit init <PATH>: init the sub repo at PATH from the gitignore"
-	elif [ "$1" == "init-all" ]; then
+	elif [ "$1" = "init-all" ]; then
 		echo "mgit init-all: init all sub repos from the gitignore"
-	elif [ "$1" == "update" ]; then
+	elif [ "$1" = "update" ]; then
 		echo "mgit update <PATH>: pull changes and update submodules for the sub repo at PATH"
-	elif [ "$1" == "update-all" ]; then
+	elif [ "$1" = "update-all" ]; then
 		echo "mgit update-all: perform update on all sub repos"
 	fi
 }
@@ -116,13 +116,13 @@ perform_sub_repo_git_command() {
 	shift
 
 	# change to repo root path
-	cd "$SUB_REPO_PATH"
+	cd "$SUB_REPO_PATH" || exit
 
 	# run the git command
 	git "$@"
 
 	# return to previous dir
-	cd "$CURRENT_DIR"
+	cd "$CURRENT_DIR" || exit
 }
 
 gitignore_get_repo_string() {
@@ -163,12 +163,12 @@ sub_repo_run_mgit() {
 	echo "Running mgit $MGIT_CMD on $REPO at $REPO_DIR"
 
 	# change to repo root path
-	cd "$(get_root_repo_path)/$REPO_DIR"
+	cd "$(get_root_repo_path)/$REPO_DIR" || exit
 
-	$0 $MGIT_CMD
+	$0 "$MGIT_CMD"
 
 	# return to previous dir
-	cd "$CURRENT_DIR"
+	cd "$CURRENT_DIR" || exit
 }
 
 sub_repo_update_submodules() {
@@ -178,7 +178,7 @@ sub_repo_update_submodules() {
 	echo "Updating submodules for $REPO at $REPO_DIR"
 
 	# change to repo root path
-	cd "$(get_root_repo_path)/$REPO_DIR"
+	cd "$(get_root_repo_path)/$REPO_DIR" || exit
 
 	# clone the repo content to root relevant path
 	echo "Resetting submodules to current HEAD..."
@@ -188,7 +188,7 @@ sub_repo_update_submodules() {
 	git submodule update --recursive --remote
 
 	# return to previous dir
-	cd "$CURRENT_DIR"
+	cd "$CURRENT_DIR" || exit
 }
 
 sub_repo_pull() {
@@ -198,13 +198,13 @@ sub_repo_pull() {
 	echo "Pulling changes for $REPO at $REPO_DIR"
 
 	# change to repo root path
-	cd "$(get_root_repo_path)/$REPO_DIR"
+	cd "$(get_root_repo_path)/$REPO_DIR" || exit
 
 	# clone the repo content to root relevant path
 	git pull
 
 	# return to previous dir
-	cd "$CURRENT_DIR"
+	cd "$CURRENT_DIR" || exit
 }
 
 sub_repo_clone() {
@@ -214,13 +214,13 @@ sub_repo_clone() {
 	echo "Cloning $REPO to $REPO_DIR"
 
 	# change to repo root path
-	cd "$(get_root_repo_path)"
+	cd "$(get_root_repo_path)" || exit
 
 	# clone the repo content to root relevant path
 	git clone "$REPO" "$REPO_DIR"
 
 	# return to previous dir
-	cd "$CURRENT_DIR"
+	cd "$CURRENT_DIR" || exit
 }
 
 sub_repo_add() {
@@ -242,7 +242,7 @@ sub_repo_remove() {
 
 	# remove local content
 	echo "$(get_root_repo_path)/$REPO_DIR"
-	rm -rf "$(get_root_repo_path)/$REPO_DIR"
+	rm -rf "$(get_root_repo_path)/${REPO_DIR:?}"
 
 	# update gitignore
 	gitignore_remove_repo "$REPO" "$REPO_DIR"
@@ -263,7 +263,7 @@ sub_repo_exec_function_on_all() {
 	shift
 
 	while read -r line ; do
-		LIST_REPO="$(echo $line | awk '{print $7}' | rev | cut -c2- | rev)"
+		LIST_REPO="$(echo "$line" | awk '{print $7}' | rev | cut -c2- | rev)"
 		LIST_REPO_PATH="$(sub_repo_get_repo_path_from_repo "$LIST_REPO" | rev | cut -c2- | rev)"
 
 		# call the function with the repo path and params
@@ -273,7 +273,7 @@ sub_repo_exec_function_on_all() {
 
 sub_repo_print_info() {
 	echo "$2: $1"
-	perform_sub_repo_git_command "$2" "status --porcelain"
+	perform_sub_repo_git_command "$2" "status" "--porcelain"
 }
 
 sub_repo_perform_self_command() {
@@ -285,12 +285,12 @@ sub_repo_perform_self_command() {
 	shift
 	shift
 
-	$0 $SELF_CMD "$REPO_PATH" "$@"
+	$0 "$SELF_CMD" "$REPO_PATH" "$@"
 }
 
 sanitize_sub_repo_path() {
 	REPO_PATH="$1"
-	if [ "$(echo "$REPO_PATH" | cut -c1-1)" == "/" ]; then
+	if [ "$(echo "$REPO_PATH" | cut -c1-1)" = "/" ]; then
 		REPO_PATH="$(echo "$REPO_PATH" | cut -c2-)"
 	fi
 
@@ -315,7 +315,7 @@ if ! gitignore_exists; then
 	gitignore_create
 fi
 
-if [ "$CMD" == "clone" ]; then
+if [ "$CMD" = "clone" ]; then
 	ADD_REPO="$2"
 	ADD_REPO_DIR="$(sanitize_sub_repo_path "$3")"
 
@@ -324,7 +324,7 @@ if [ "$CMD" == "clone" ]; then
 		exit
 	fi
 	
-	if [ ! -z "$(sub_repo_get_repo_path_from_repo "$ADD_REPO")" ]; then
+	if [ -n "$(sub_repo_get_repo_path_from_repo "$ADD_REPO")" ]; then
 		echo "Repo exists"
 		echo "REPO: $ADD_REPO"
 		echo "PATH: $(sub_repo_get_repo_path_from_repo "$ADD_REPO")"
@@ -336,7 +336,7 @@ if [ "$CMD" == "clone" ]; then
 		# run mgit on the repo
 		sub_repo_run_mgit "$ADD_REPO" "$ADD_REPO_DIR" init-all
 	fi
-elif [ "$CMD" == "rm" ]; then
+elif [ "$CMD" = "rm" ]; then
 	REMOVE_REPO_DIR="$(sanitize_sub_repo_path "$2")"
 	REMOVE_REPO="$(sub_repo_get_repo_from_path "$REMOVE_REPO_DIR")"
 
@@ -348,17 +348,17 @@ elif [ "$CMD" == "rm" ]; then
 	if [ -d "$(get_root_repo_path)/$REMOVE_REPO_DIR" ]; then
 		read -p "Are you sure [y/n]? " -n 1 -r
 		echo    # (optional) move to a new line
-		if [ "$REPLY" == "y" ]; then
+		if [ "$REPLY" = "y" ]; then
 			# remove the sub repo
 			REMOVE_REPO_STATUS="$(perform_sub_repo_git_command "$REMOVE_REPO_DIR" "status --porcelain")"
 
-			if [ ! -z "$REMOVE_REPO_STATUS" ]; then
+			if [ -n "$REMOVE_REPO_STATUS" ]; then
 				echo "Repo $REMOVE_REPO_DIR status:"
-				echo $REMOVE_REPO_STATUS
+				echo "$REMOVE_REPO_STATUS"
 
 				read -p "Confirm removal of directory and pending changes [y/n]? " -n 1 -r
 				echo    # (optional) move to a new line
-				if [ "$REPLY" == "y" ]; then
+				if [ "$REPLY" = "y" ]; then
 					sub_repo_remove "$REMOVE_REPO" "$REMOVE_REPO_DIR"
 				fi
 			else
@@ -369,7 +369,7 @@ elif [ "$CMD" == "rm" ]; then
 		echo "No sub-repo at path $REMOVE_REPO_DIR"
 	fi
 
-elif [ "$CMD" == "rm-all" ]; then
+elif [ "$CMD" = "rm-all" ]; then
 	echo "The following sub repos and directories will be removed:"
 
 	# list all sub repos
@@ -377,14 +377,14 @@ elif [ "$CMD" == "rm-all" ]; then
 	
 	read -p "Locally committed changes will be lost. Remove all sub repos? [y/n]? " -n 1 -r
 	echo    # (optional) move to a new line
-	if [ "$REPLY" == "y" ]; then
+	if [ "$REPLY" = "y" ]; then
 		sub_repo_exec_function_on_all sub_repo_remove
 	fi
 
-elif [ "$CMD" == "ls" ]; then
+elif [ "$CMD" = "ls" ]; then
 	sub_repo_exec_function_on_all sub_repo_print_info
 
-elif [ "$CMD" == "exec" ]; then
+elif [ "$CMD" = "exec" ]; then
 	EXEC_SUB_REPO="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$EXEC_SUB_REPO" ]; then
@@ -402,7 +402,7 @@ elif [ "$CMD" == "exec" ]; then
 		echo "Invalid sub-repo: $EXEC_SUB_REPO"
 	fi
 
-elif [ "$CMD" == "exec-sh" ]; then
+elif [ "$CMD" = "exec-sh" ]; then
 	EXEC_SUB_REPO="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$EXEC_SUB_REPO" ]; then
@@ -415,35 +415,35 @@ elif [ "$CMD" == "exec-sh" ]; then
 		shift
 		shift
 
-		cd "$(get_root_repo_path)/$EXEC_SUB_REPO"
+		cd "$(get_root_repo_path)/$EXEC_SUB_REPO" || exit
 		"$@"
-		cd "$CURRENT_DIR"
+		cd "$CURRENT_DIR" || exit
 	else
 		echo "Invalid sub-repo: $EXEC_SUB_REPO"
 	fi
 
-elif [ "$CMD" == "exec-all" ]; then
+elif [ "$CMD" = "exec-all" ]; then
 	# remove command from params
 	shift
 
 	sub_repo_exec_function_on_all sub_repo_perform_self_command exec "$@"
 
-elif [ "$CMD" == "exec-sh-all" ]; then
+elif [ "$CMD" = "exec-sh-all" ]; then
 	# remove command from params
 	shift
 
 	sub_repo_exec_function_on_all sub_repo_perform_self_command exec-cmd "$@"
 
 # exec-all shortcuts
-elif [ "$CMD" == "status" ]; then
+elif [ "$CMD" = "status" ]; then
 	$0 exec-all "$CMD"
-elif [ "$CMD" == "pull" ]; then
+elif [ "$CMD" = "pull" ]; then
 	$0 exec-all "$CMD"
-elif [ "$CMD" == "push" ]; then
+elif [ "$CMD" = "push" ]; then
 	$0 exec-all "$CMD"
 
 # init existing repo from gitignore
-elif [ "$CMD" == "init" ]; then
+elif [ "$CMD" = "init" ]; then
 	INIT_REPO_PATH="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$INIT_REPO_PATH" ]; then
@@ -461,10 +461,10 @@ elif [ "$CMD" == "init" ]; then
 	# run mgit on the repo
 	sub_repo_run_mgit "$INIT_REPO" "$INIT_REPO_PATH" init-all
 
-elif [ "$CMD" == "init-all" ]; then
+elif [ "$CMD" = "init-all" ]; then
 	sub_repo_exec_function_on_all sub_repo_perform_self_command init "$@"
 
-elif [ "$CMD" == "update" ]; then
+elif [ "$CMD" = "update" ]; then
 	UPDATE_REPO_PATH="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$UPDATE_REPO_PATH" ]; then
@@ -483,10 +483,10 @@ elif [ "$CMD" == "update" ]; then
 	# run mgit on the repo
 	sub_repo_run_mgit "$UPDATE_REPO" "$UPDATE_REPO_PATH" update-all
 
-elif [ "$CMD" == "update-all" ]; then
+elif [ "$CMD" = "update-all" ]; then
 	sub_repo_exec_function_on_all sub_repo_perform_self_command update "$@"
 
-elif [ "$CMD" == "mv" ]; then
+elif [ "$CMD" = "mv" ]; then
 	REPO_PATH="$2"
 	REPO_PATH_NEW="$3"
 
@@ -497,7 +497,7 @@ elif [ "$CMD" == "mv" ]; then
 
 	REPO="$(sub_repo_get_repo_from_path "$REPO_PATH")"
 
-	if [ ! -z "$REPO" ]; then
+	if [ -n "$REPO" ]; then
 		sub_repo_remove "$REPO" "$REPO_PATH"
 
 		$0 clone "$REPO" "$REPO_PATH_NEW"
@@ -505,23 +505,23 @@ elif [ "$CMD" == "mv" ]; then
 		echo "Invalid sub-repo: $REPO_PATH"
 	fi
 
-elif [ "$CMD" == "cd" ]; then
+elif [ "$CMD" = "cd" ]; then
 	CD_REPO_PATH="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$CD_REPO_PATH" ]; then
 		if [ -z "$MGIT_ROOT" ]; then
-			cd "$(get_root_repo_path)" # return to the sub modules root
+			cd "$(get_root_repo_path)" || exit # return to the sub modules root
 		else
-			cd "$MGIT_ROOT" # if MGIT_ROOT is set, return there
+			cd "$MGIT_ROOT" || exit # if MGIT_ROOT is set, return there
 		fi
 	else
 		export MGIT_ROOT="$CURRENT_DIR"
-		cd "$(get_root_repo_path)/$CD_REPO_PATH"
+		cd "$(get_root_repo_path)/$CD_REPO_PATH" || exit
 	fi
 
 	$SHELL
 
-elif [ "$CMD" == "help" ]; then
+elif [ "$CMD" = "help" ]; then
 	print_help
 else
 	git "$@" # pass through as git command (why not)
