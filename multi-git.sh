@@ -16,6 +16,7 @@ print_help() {
 		echo "Sub repo management:"
 		print_help clone
 		print_help rm
+		print_help rm-all
 		print_help ls
 		echo ""
 		echo "Initialising and updating sub repos:"
@@ -36,6 +37,8 @@ print_help() {
 		echo "mgit clone REPO PATH: clone the sub repo REPO to PATH"
 	elif [ "$1" == "rm" ]; then
 		echo "mgit rm PATH: remove the sub repo at PATH"
+	elif [ "$1" == "rm-all" ]; then
+		echo "mgit rm-all: remove all the local sub repos and cleanup"
 	elif [ "$1" == "ls" ]; then
 		echo "mgit ls: list all local sub repos"
 	elif [ "$1" == "exec" ]; then
@@ -332,12 +335,28 @@ elif [ "$CMD" == "rm" ]; then
 		echo "No sub-repo at path $REMOVE_REPO_DIR"
 	fi
 
+elif [ "$CMD" == "rm-all" ]; then
+	echo "The following sub repos and directories will be removed:"
+
+	# list all sub repos
+	$0 ls
+	
+	read -p "Locally committed changes will be lost. Remove all sub repos? [y/n]? " -n 1 -r
+	echo    # (optional) move to a new line
+	if [ "$REPLY" == "y" ]; then
+		sub_repo_exec_function_on_all sub_repo_remove
+	fi
 
 elif [ "$CMD" == "ls" ]; then
 	sub_repo_exec_function_on_all sub_repo_print_info
 
 elif [ "$CMD" == "exec" ]; then
 	EXEC_SUB_REPO="$(sanitize_sub_repo_path "$2")"
+
+	if [ -z "$EXEC_SUB_REPO" ]; then
+		print_help exec
+		exit
+	fi
 
 	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
 		# remove command and repo name
@@ -353,6 +372,11 @@ elif [ "$CMD" == "exec" ]; then
 
 elif [ "$CMD" == "exec-cmd" ]; then
 	EXEC_SUB_REPO="$(sanitize_sub_repo_path "$2")"
+
+	if [ -z "$EXEC_SUB_REPO" ]; then
+		print_help exec-cmd
+		exit
+	fi
 
 	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
 		# remove command and repo name
@@ -395,6 +419,12 @@ elif [ "$CMD" == "push" ]; then
 # init existing repo from gitignore
 elif [ "$CMD" == "init" ]; then
 	INIT_REPO_PATH="$(sanitize_sub_repo_path "$2")"
+
+	if [ -z "$INIT_REPO_PATH" ]; then
+		print_help init
+		exit
+	fi
+
 	INIT_REPO="$(sub_repo_get_repo_from_path "$INIT_REPO_PATH")"
 
 	# clone repo to sub repo path
@@ -407,6 +437,12 @@ elif [ "$CMD" == "init-all" ]; then
 
 elif [ "$CMD" == "update" ]; then
 	UPDATE_REPO_PATH="$(sanitize_sub_repo_path "$2")"
+
+	if [ -z "$UPDATE_REPO_PATH" ]; then
+		print_help update
+		exit
+	fi
+
 	UPDATE_REPO="$(sub_repo_get_repo_from_path "$UPDATE_REPO_PATH")"
 
 	# update repo
