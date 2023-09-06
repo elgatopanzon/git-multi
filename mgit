@@ -47,7 +47,7 @@ print_help() {
 	elif [ "$1" == "mv" ]; then
 		echo "mgit mv <PATH> <NEW_PATH>: Move the sub repo at PATH to NEW_PATH"
 	elif [ "$1" == "cd" ]; then
-		echo "mgit d <PATH>: change to the directory of a sub module at PATH"
+		echo "mgit cd <PATH>: change to the directory of a sub module at PATH"
 	elif [ "$1" == "rm" ]; then
 		echo "mgit rm <PATH>: remove the sub repo at PATH"
 	elif [ "$1" == "rm-all" ]; then
