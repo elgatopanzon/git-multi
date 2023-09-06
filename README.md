@@ -14,7 +14,7 @@ Introducing git-multi!
 * Recursively manage trees of nested git repos!
 
 # How to use it
-Git-multi is a git plugin, and once the script `git-multi` is in your path it can be used as a native git subcommand with `git multi`.
+Git-multi is a git plugin, and once the script `git-multi` is in your `PATH` it can be used as a native git subcommand with `git multi`.
 
 The first thing you'll want to do is get a main repo where you want to clone your nested git repos.
 
