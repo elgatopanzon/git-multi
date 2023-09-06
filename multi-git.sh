@@ -179,7 +179,7 @@ sub_repo_exec_function_on_all() {
 }
 
 sub_repo_print_info() {
-	echo "/$2: $1"
+	echo "$2: $1"
 	perform_sub_repo_git_command "$2" "status --porcelain"
 }
 
