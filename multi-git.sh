@@ -247,6 +247,14 @@ elif [ "$CMD" == "exec-all" ]; then
 		$0 exec "$LIST_REPO_PATH" "$@"
 	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
 
+# exec-all shortcuts
+elif [ "$CMD" == "status" ]; then
+	$0 exec-all "$CMD"
+elif [ "$CMD" == "pull" ]; then
+	$0 exec-all "$CMD"
+elif [ "$CMD" == "push" ]; then
+	$0 exec-all "$CMD"
+
 elif [ "$CMD" == "help" ]; then
 	print_help
 else
