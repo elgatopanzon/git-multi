@@ -219,6 +219,34 @@ elif [ "$CMD" == "list" ]; then
 		echo "/$LIST_REPO_PATH: $LIST_REPO"
 		perform_sub_repo_git_command "$LIST_REPO_PATH" "status --porcelain"
 	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
+elif [ "$CMD" == "exec" ]; then
+	EXEC_SUB_REPO="$2"
+
+	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
+		# remove command and repo name
+		params=( $* )
+    	unset params[0]
+    	unset params[1]
+    	set -- "${params[@]}"
+
+		perform_sub_repo_git_command "$EXEC_SUB_REPO" "$@"
+	else
+		echo "Invalid sub-repo: $EXEC_SUB_REPO"
+	fi
+
+elif [ "$CMD" == "exec-all" ]; then
+	# remove command from params
+	params=( $* )
+    unset params[0]
+    set -- "${params[@]}"
+
+	while read -r line ; do
+		LIST_REPO="$(echo $line | awk '{print $7}' | rev | cut -c2- | rev)"
+		LIST_REPO_PATH="$(sub_repo_get_repo_path_from_repo "$LIST_REPO" | rev | cut -c2- | rev)"
+
+		$0 exec "$LIST_REPO_PATH" "$@"
+	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
+
 elif [ "$CMD" == "help" ]; then
 	print_help
 else
