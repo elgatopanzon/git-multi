@@ -1,4 +1,4 @@
-# Multi-git - Git Submodules that don't suck!
+# Multi-git - Git Submodules done better?!
 
 This project is a little tool I decided to put together because I keep running into this same problem: how can I effectively manage multiple nested git repos in a single repo without running into something messy?
 
