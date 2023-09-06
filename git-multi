@@ -354,7 +354,7 @@ elif [ "$CMD" = "rm" ]; then
 		echo    # (optional) move to a new line
 		if [ "$REPLY" = "y" ]; then
 			# remove the sub repo
-			REMOVE_REPO_STATUS="$(perform_sub_repo_git_command "$REMOVE_REPO_DIR" "status --porcelain")"
+			REMOVE_REPO_STATUS="$(perform_sub_repo_git_command "$REMOVE_REPO_DIR" "status" "--porcelain")"
 
 			if [ -n "$REMOVE_REPO_STATUS" ]; then
 				echo "Repo $REMOVE_REPO_DIR status:"
