@@ -14,10 +14,15 @@
 
 print_help() {
 	if [ "$1" == "" ]; then
+		print_help help
+		echo "Sub repo management:"
 		print_help add
 		print_help remove
 		print_help list
-		print_help help
+		echo ""
+		echo "Working with sub repos:"
+		print_help exec
+		print_help exec-all
 
 	elif [ "$1" == "help" ]; then
 		echo "mgit help: show this help"
@@ -27,6 +32,10 @@ print_help() {
 		echo "mgit remove PATH: remove the sub repo at PATH"
 	elif [ "$1" == "list" ]; then
 		echo "mgit list: list all local sub repos"
+	elif [ "$1" == "exec" ]; then
+		echo "mgit exec PATH ...: run a git command on the sub repo at PATH"
+	elif [ "$1" == "exec-all" ]; then
+		echo "mgit exec-all ...: run a git command on all local sub repo paths"
 	fi
 }
 
