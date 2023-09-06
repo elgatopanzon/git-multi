@@ -41,35 +41,35 @@ print_help() {
 		print_help rm-all
 
 	elif [ "$1" = "help" ]; then
-		echo "mgit help: show this help"
+		echo "git multi help: show this help"
 	elif [ "$1" = "clone" ]; then
-		echo "mgit clone <REPO> <PATH>: clone the sub repo REPO to PATH"
+		echo "git multi clone <REPO> <PATH>: clone the sub repo REPO to PATH"
 	elif [ "$1" = "mv" ]; then
-		echo "mgit mv <PATH> <NEW_PATH>: Move the sub repo at PATH to NEW_PATH"
+		echo "git multi mv <PATH> <NEW_PATH>: Move the sub repo at PATH to NEW_PATH"
 	elif [ "$1" = "cd" ]; then
-		echo "mgit cd <PATH>: change to the directory of a sub module at PATH"
+		echo "git multi cd <PATH>: change to the directory of a sub module at PATH"
 	elif [ "$1" = "rm" ]; then
-		echo "mgit rm <PATH>: remove the sub repo at PATH"
+		echo "git multi rm <PATH>: remove the sub repo at PATH"
 	elif [ "$1" = "rm-all" ]; then
-		echo "mgit rm-all: remove all the local sub repos and cleanup"
+		echo "git multi rm-all: remove all the local sub repos and cleanup"
 	elif [ "$1" = "ls" ]; then
-		echo "mgit ls: list all local sub repos"
+		echo "git multi ls: list all local sub repos"
 	elif [ "$1" = "exec" ]; then
-		echo "mgit exec <PATH> CMD...: run a git command on the sub repo at PATH"
+		echo "git multi exec <PATH> CMD...: run a git command on the sub repo at PATH"
 	elif [ "$1" = "exec-all" ]; then
-		echo "mgit exec-all CMD...: run a git command on all local sub repo paths"
+		echo "git multi exec-all CMD...: run a git command on all local sub repo paths"
 	elif [ "$1" = "exec-sh" ]; then
-		echo "mgit exec-sh <PATH> CMD...: run a shell command on the sub repo at PATH"
+		echo "git multi exec-sh <PATH> CMD...: run a shell command on the sub repo at PATH"
 	elif [ "$1" = "exec-sh-all" ]; then
-		echo "mgit exec-sh-all CMD...: run a shell command on all local sub repo paths"
+		echo "git multi exec-sh-all CMD...: run a shell command on all local sub repo paths"
 	elif [ "$1" = "init" ]; then
-		echo "mgit init <PATH>: init the sub repo at PATH from the gitignore"
+		echo "git multi init <PATH>: init the sub repo at PATH from the gitignore"
 	elif [ "$1" = "init-all" ]; then
-		echo "mgit init-all: init all sub repos from the gitignore"
+		echo "git multi init-all: init all sub repos from the gitignore"
 	elif [ "$1" = "update" ]; then
-		echo "mgit update <PATH>: pull changes and update submodules for the sub repo at PATH"
+		echo "git multi update <PATH>: pull changes and update submodules for the sub repo at PATH"
 	elif [ "$1" = "update-all" ]; then
-		echo "mgit update-all: perform update on all sub repos"
+		echo "git multi update-all: perform update on all sub repos"
 	fi
 }
 
@@ -155,17 +155,17 @@ sub_repo_exists() {
 	fi
 }
 
-sub_repo_run_mgit() {
+sub_repo_run_git_multi() {
 	REPO="$1"
 	REPO_DIR="$2"
-	MGIT_CMD="$3"
+	GITMULTI_CMD="$3"
 
-	echo "Running mgit $MGIT_CMD on $REPO at $REPO_DIR"
+	echo "Running git multi $GITMULTI_CMD on $REPO at $REPO_DIR"
 
 	# change to repo root path
 	cd "$(get_root_repo_path)/$REPO_DIR" || exit
 
-	$0 "$MGIT_CMD"
+	$0 "$GITMULTI_CMD"
 
 	# return to previous dir
 	cd "$CURRENT_DIR" || exit
@@ -333,8 +333,8 @@ if [ "$CMD" = "clone" ]; then
 
 		sub_repo_update_submodules "$ADD_REPO" "$ADD_REPO_DIR"
 
-		# run mgit on the repo
-		sub_repo_run_mgit "$ADD_REPO" "$ADD_REPO_DIR" init-all
+		# run git multi on the repo
+		sub_repo_run_git_multi "$ADD_REPO" "$ADD_REPO_DIR" init-all
 	fi
 elif [ "$CMD" = "rm" ]; then
 	REMOVE_REPO_DIR="$(sanitize_sub_repo_path "$2")"
@@ -458,8 +458,8 @@ elif [ "$CMD" = "init" ]; then
 
 	sub_repo_update_submodules "$INIT_REPO" "$INIT_REPO_PATH"
 
-	# run mgit on the repo
-	sub_repo_run_mgit "$INIT_REPO" "$INIT_REPO_PATH" init-all
+	# run git multi on the repo
+	sub_repo_run_git_multi "$INIT_REPO" "$INIT_REPO_PATH" init-all
 
 elif [ "$CMD" = "init-all" ]; then
 	sub_repo_exec_function_on_all sub_repo_perform_self_command init "$@"
@@ -480,8 +480,8 @@ elif [ "$CMD" = "update" ]; then
 	# update submodules
 	sub_repo_update_submodules "$UPDATE_REPO" "$UPDATE_REPO_PATH"
 
-	# run mgit on the repo
-	sub_repo_run_mgit "$UPDATE_REPO" "$UPDATE_REPO_PATH" update-all
+	# run git multi on the repo
+	sub_repo_run_git_multi "$UPDATE_REPO" "$UPDATE_REPO_PATH" update-all
 
 elif [ "$CMD" = "update-all" ]; then
 	sub_repo_exec_function_on_all sub_repo_perform_self_command update "$@"
@@ -509,13 +509,13 @@ elif [ "$CMD" = "cd" ]; then
 	CD_REPO_PATH="$(sanitize_sub_repo_path "$2")"
 
 	if [ -z "$CD_REPO_PATH" ]; then
-		if [ -z "$MGIT_ROOT" ]; then
+		if [ -z "$GITMULTI_ROOT" ]; then
 			cd "$(get_root_repo_path)" || exit # return to the sub modules root
 		else
-			cd "$MGIT_ROOT" || exit # if MGIT_ROOT is set, return there
+			cd "$GITMULTI_ROOT" || exit # if GITMULTI_ROOT is set, return there
 		fi
 	else
-		export MGIT_ROOT="$CURRENT_DIR"
+		export GITMULTI_ROOT="$CURRENT_DIR"
 		cd "$(get_root_repo_path)/$CD_REPO_PATH" || exit
 	fi
 
