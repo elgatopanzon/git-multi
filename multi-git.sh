@@ -202,6 +202,16 @@ sub_repo_perform_self_command() {
 	$0 $SELF_CMD "$REPO_PATH" "$@"
 }
 
+sanitize_sub_repo_path() {
+	REPO_PATH="$1"
+	if [ "$(echo "$REPO_PATH" | cut -c1-1)" == "/" ]; then
+		REPO_PATH="$(echo "$REPO_PATH" | cut -c2-)"
+	fi
+
+	echo "$REPO_PATH"
+
+}
+
 test_function() {
 	echo "$@"
 }
@@ -221,7 +231,7 @@ fi
 
 if [ "$CMD" == "add" ]; then
 	ADD_REPO="$2"
-	ADD_REPO_DIR="$3"
+	ADD_REPO_DIR="$(sanitize_sub_repo_path "$3")"
 
 	if [ -z "$ADD_REPO" ] || [ -z "$ADD_REPO_DIR" ]; then
 		print_help add
@@ -236,7 +246,7 @@ if [ "$CMD" == "add" ]; then
 		sub_repo_add "$ADD_REPO" "$ADD_REPO_DIR"
 	fi
 elif [ "$CMD" == "remove" ]; then
-	REMOVE_REPO_DIR="$2"
+	REMOVE_REPO_DIR="$(sanitize_sub_repo_path "$2")"
 	REMOVE_REPO="$(sub_repo_get_repo_from_path "$REMOVE_REPO_DIR")"
 
 	if [ -z "$REMOVE_REPO_DIR" ]; then
@@ -273,7 +283,7 @@ elif [ "$CMD" == "list" ]; then
 	sub_repo_exec_function_on_all sub_repo_print_info
 
 elif [ "$CMD" == "exec" ]; then
-	EXEC_SUB_REPO="$2"
+	EXEC_SUB_REPO="$(sanitize_sub_repo_path "$2")"
 
 	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
 		# remove command and repo name
@@ -288,7 +298,7 @@ elif [ "$CMD" == "exec" ]; then
 	fi
 
 elif [ "$CMD" == "exec-cmd" ]; then
-	EXEC_SUB_REPO="$2"
+	EXEC_SUB_REPO="$(sanitize_sub_repo_path "$2")"
 
 	if [ -d "$(get_root_repo_path)/$EXEC_SUB_REPO" ]; then
 		# remove command and repo name
