@@ -18,6 +18,12 @@ print_help() {
 		print_help rm
 		print_help ls
 		echo ""
+		echo "Initialising and updating sub repos:"
+		print_help init
+		print_help init-all
+		print_help update
+		print_help update-all
+		echo ""
 		echo "Working with sub repos:"
 		print_help exec
 		print_help exec-all
@@ -40,6 +46,14 @@ print_help() {
 		echo "mgit exec-cmd PATH ...: run a shell command on the sub repo at PATH"
 	elif [ "$1" == "exec-cmd-all" ]; then
 		echo "mgit exec-cmd-all ...: run a shell command on all local sub repo paths"
+	elif [ "$1" == "init" ]; then
+		echo "mgit init PATH: init the sub repo at PATH from the gitignore"
+	elif [ "$1" == "init-all" ]; then
+		echo "mgit init-all: init all sub repos from the gitignore"
+	elif [ "$1" == "update" ]; then
+		echo "mgit update PATH: pull changes and update submodules for the sub repo at PATH"
+	elif [ "$1" == "update-all" ]; then
+		echo "mgit update-all: perform update on all sub repos"
 	fi
 }
 
@@ -117,6 +131,42 @@ sub_repo_exists() {
 	else
 		echo "exists"
 	fi
+}
+
+sub_repo_update_submodules() {
+	REPO="$1"
+	REPO_DIR="$2"
+
+	echo "Updating submodules for $REPO at $REPO_DIR"
+
+	# change to repo root path
+	cd "$(get_root_repo_path)/$REPO_DIR"
+
+	# clone the repo content to root relevant path
+	echo "Resetting submodules to current HEAD..."
+	git submodule foreach --recursive git reset --hard
+
+	echo "Updating submodules to current master"
+	git submodule update --recursive --remote
+
+	# return to previous dir
+	cd "$CURRENT_DIR"
+}
+
+sub_repo_pull() {
+	REPO="$1"
+	REPO_DIR="$2"
+
+	echo "Pulling changes for $REPO at $REPO_DIR"
+
+	# change to repo root path
+	cd "$(get_root_repo_path)/$REPO_DIR"
+
+	# clone the repo content to root relevant path
+	git pull
+
+	# return to previous dir
+	cd "$CURRENT_DIR"
 }
 
 sub_repo_clone() {
@@ -350,6 +400,19 @@ elif [ "$CMD" == "init" ]; then
 
 elif [ "$CMD" == "init-all" ]; then
 	sub_repo_exec_function_on_all sub_repo_perform_self_command init "$@"
+
+elif [ "$CMD" == "update" ]; then
+	UPDATE_REPO_PATH="$(sanitize_sub_repo_path "$2")"
+	UPDATE_REPO="$(sub_repo_get_repo_from_path "$UPDATE_REPO_PATH")"
+
+	# update repo
+	sub_repo_pull "$UPDATE_REPO" "$UPDATE_REPO_PATH"
+
+	# update submodules
+	sub_repo_update_submodules "$UPDATE_REPO" "$UPDATE_REPO_PATH"
+
+elif [ "$CMD" == "update-all" ]; then
+	sub_repo_exec_function_on_all sub_repo_perform_self_command update "$@"
 
 elif [ "$CMD" == "help" ]; then
 	print_help
