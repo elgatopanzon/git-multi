@@ -35,27 +35,27 @@ print_help() {
 	elif [ "$1" == "help" ]; then
 		echo "mgit help: show this help"
 	elif [ "$1" == "clone" ]; then
-		echo "mgit clone REPO PATH: clone the sub repo REPO to PATH"
+		echo "mgit clone <REPO> <PATH>: clone the sub repo REPO to PATH"
 	elif [ "$1" == "rm" ]; then
-		echo "mgit rm PATH: remove the sub repo at PATH"
+		echo "mgit rm <PATH>: remove the sub repo at PATH"
 	elif [ "$1" == "rm-all" ]; then
 		echo "mgit rm-all: remove all the local sub repos and cleanup"
 	elif [ "$1" == "ls" ]; then
 		echo "mgit ls: list all local sub repos"
 	elif [ "$1" == "exec" ]; then
-		echo "mgit exec PATH ...: run a git command on the sub repo at PATH"
+		echo "mgit exec <PATH> ...: run a git command on the sub repo at PATH"
 	elif [ "$1" == "exec-all" ]; then
 		echo "mgit exec-all ...: run a git command on all local sub repo paths"
 	elif [ "$1" == "exec-cmd" ]; then
-		echo "mgit exec-cmd PATH ...: run a shell command on the sub repo at PATH"
+		echo "mgit exec-cmd <PATH> ...: run a shell command on the sub repo at PATH"
 	elif [ "$1" == "exec-cmd-all" ]; then
 		echo "mgit exec-cmd-all ...: run a shell command on all local sub repo paths"
 	elif [ "$1" == "init" ]; then
-		echo "mgit init PATH: init the sub repo at PATH from the gitignore"
+		echo "mgit init <PATH>: init the sub repo at PATH from the gitignore"
 	elif [ "$1" == "init-all" ]; then
 		echo "mgit init-all: init all sub repos from the gitignore"
 	elif [ "$1" == "update" ]; then
-		echo "mgit update PATH: pull changes and update submodules for the sub repo at PATH"
+		echo "mgit update <PATH>: pull changes and update submodules for the sub repo at PATH"
 	elif [ "$1" == "update-all" ]; then
 		echo "mgit update-all: perform update on all sub repos"
 	fi
