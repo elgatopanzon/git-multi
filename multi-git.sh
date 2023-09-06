@@ -12,6 +12,24 @@
 # example line in .gitignore:
 # path/to/sub/repo # Managed by multi-git
 
+print_help() {
+	if [ "$1" == "" ]; then
+		print_help add
+		print_help remove
+		print_help list
+		print_help add
+
+	elif [ "$1" == "help" ]; then
+		echo "mgit help: show this help"
+	elif [ "$1" == "add" ]; then
+		echo "mgit add REPO PATH: clone the sub repo REPO to PATH"
+	elif [ "$1" == "remove" ]; then
+		echo "mgit remove PATH: remove the sub repo at PATH"
+	elif [ "$1" == "list" ]; then
+		echo "mgit list: list all local sub repos"
+	fi
+}
+
 GITIGNORE_MANAGED_STRING="Managed by multi-git"
 
 get_root_repo_path() {
@@ -135,6 +153,9 @@ sub_repo_get_repo_path_from_repo() {
 }
 
 CMD="$1" # command to perform
+if [ -z "$CMD" ]; then
+	CMD="help"
+fi
 
 # init the .gitignore file if exists
 if ! gitignore_exists; then
@@ -149,7 +170,7 @@ if [ "$CMD" == "add" ]; then
 	ADD_REPO_DIR="$3"
 
 	if [ -z "$ADD_REPO" ] || [ -z "$ADD_REPO_DIR" ]; then
-		echo "usage: add REPO PATH"
+		print_help add
 		exit
 	fi
 	
@@ -163,6 +184,11 @@ if [ "$CMD" == "add" ]; then
 elif [ "$CMD" == "remove" ]; then
 	REMOVE_REPO_DIR="$2"
 	REMOVE_REPO="$(sub_repo_get_repo_from_path "$REMOVE_REPO_DIR")"
+
+	if [ -z "$REMOVE_REPO_DIR" ]; then
+		print_help remove
+		exit
+	fi
 
 	if [ -d "$(get_root_repo_path)/$REMOVE_REPO_DIR" ]; then
 		read -p "Are you sure [y/n]? " -n 1 -r
@@ -193,4 +219,6 @@ elif [ "$CMD" == "list" ]; then
 		echo "/$LIST_REPO_PATH: $LIST_REPO"
 		perform_sub_repo_git_command "$LIST_REPO_PATH" "status --porcelain"
 	done < <(grep "$GITIGNORE_MANAGED_STRING" "$GITIGNORE_PATH")	
+elif [ "$CMD" == "help" ]; then
+	print_help
 fi
