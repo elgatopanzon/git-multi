@@ -19,6 +19,7 @@ print_help() {
 		print_help clone
 		print_help ls
 		print_help mv
+		print_help cd
 		print_help rm
 		echo ""
 
@@ -45,6 +46,8 @@ print_help() {
 		echo "mgit clone <REPO> <PATH>: clone the sub repo REPO to PATH"
 	elif [ "$1" == "mv" ]; then
 		echo "mgit mv <PATH> <NEW_PATH>: Move the sub repo at PATH to NEW_PATH"
+	elif [ "$1" == "cd" ]; then
+		echo "mgit d <PATH>: change to the directory of a sub module at PATH"
 	elif [ "$1" == "rm" ]; then
 		echo "mgit rm <PATH>: remove the sub repo at PATH"
 	elif [ "$1" == "rm-all" ]; then
@@ -515,6 +518,17 @@ elif [ "$CMD" == "mv" ]; then
 	else
 		echo "Invalid sub-repo: $REPO_PATH"
 	fi
+
+elif [ "$CMD" == "cd" ]; then
+	CD_REPO_PATH="$(sanitize_sub_repo_path "$2")"
+
+	if [ -z "$CD_REPO_PATH" ]; then
+		cd "$(get_root_repo_path)"
+	else
+		cd "$(get_root_repo_path)/$CD_REPO_PATH"
+	fi
+
+	$SHELL
 
 elif [ "$CMD" == "help" ]; then
 	print_help
