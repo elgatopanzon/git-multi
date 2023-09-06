@@ -9,8 +9,6 @@
 ######################################################################
 
 # all state is stored in .gitignore using comments to identify that it's managed by multi-git
-# example line in .gitignore:
-# path/to/sub/repo # Managed by multi-git
 
 print_help() {
 	if [ "$1" == "" ]; then
