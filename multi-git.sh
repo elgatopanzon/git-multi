@@ -17,7 +17,7 @@ print_help() {
 		print_help add
 		print_help remove
 		print_help list
-		print_help add
+		print_help help
 
 	elif [ "$1" == "help" ]; then
 		echo "mgit help: show this help"
